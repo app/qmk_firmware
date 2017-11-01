@@ -32,19 +32,51 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 		KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, 
 		KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS),
 };
-
+/* id for user defined functions */
+enum function_id {
+    RUSLAT,
+};
 
 const uint16_t PROGMEM fn_actions[] = {
-    [0] = ACTION_MODS_TAP_KEY(MOD_LCTL, KC_CAPS),
+    [0] = ACTION_FUNCTION_TAP(RUSLAT),  // Generates Shift+Gui keys on tap or works as LCTL while holded down
     [1] = ACTION_MODS_TAP_KEY(MOD_RCTL, KC_ENT),
-    [2] = ACTION_MODS_TAP_KEY(MOD_RALT, KC_LEFT),
-    [3] = ACTION_MODS_TAP_KEY(MOD_RCTL, KC_RIGHT),
-    [4] = ACTION_LAYER_MOMENTARY(1),
-    [5] = ACTION_MODS_TAP_KEY(MOD_RSFT, KC_PGUP),
-    [6] = ACTION_MODS_TAP_KEY(MOD_RGUI, KC_PGDN),
-    [7] = ACTION_MODS_TAP_KEY(MOD_RALT, KC_HOME),
-    [8] = ACTION_MODS_TAP_KEY(MOD_RCTL, KC_END),
+
 };
+
+
+//Left Control key Tap (down+up) works as LShift+LGUI 
+//I use LShift+LGUI for RUS/ENG keyboard layout switching
+void action_function(keyrecord_t *record, uint8_t id, uint8_t opt)
+{
+    /*keyevent_t event = record->event;*/
+    switch (id) {
+        case RUSLAT:
+            if (record->event.pressed) {
+                if (record->tap.count > 0 && !record->tap.interrupted) {
+                    if (record->tap.interrupted) {
+                        register_mods(MOD_BIT(KC_LCTRL));
+                    }
+                } else {
+                    register_mods(MOD_BIT(KC_LCTRL));
+                }
+            } else {
+                if (record->tap.count > 0 && !(record->tap.interrupted)) {
+			add_mods( MOD_BIT(KC_LSFT));
+			add_mods( MOD_BIT(KC_LALT));
+			send_keyboard_report();
+
+			del_mods( MOD_BIT(KC_LALT));
+			del_mods( MOD_BIT(KC_LSFT));
+			send_keyboard_report();
+
+			record->tap.count = 0;  // ad hoc: cancel tap
+                } else {
+                    unregister_mods(MOD_BIT(KC_LCTRL));
+                }
+            }
+            break;
+    }
+}
 
 
 /* enum function_id { */
